@@ -1,84 +1,47 @@
-const form = document.getElementById("transactionForm");
+const form = document.getElementById("transferForm");
 const messageBox = document.getElementById("message");
-const signatureResult = document.getElementById("signatureResult");
-const signButton = document.getElementById("signButton");
+const transferResult = document.getElementById("transferResult");
+const transferButton = document.getElementById("transferButton");
+const refreshButton = document.getElementById("refreshButton");
 
 
-function addDetail(container, label, value, isSignature = false) {
-    const labelElement = document.createElement("p");
+function addDetail(container, label, value) {
+    const paragraph = document.createElement("p");
     const strong = document.createElement("strong");
 
     strong.textContent = label + ": ";
-    labelElement.appendChild(strong);
 
-    if (isSignature) {
-        const code = document.createElement("code");
-        code.className = "signature-value";
-        code.textContent = value;
+    paragraph.appendChild(strong);
+    paragraph.appendChild(document.createTextNode(String(value)));
 
-        container.appendChild(labelElement);
-        container.appendChild(code);
-    } else {
-        labelElement.appendChild(
-            document.createTextNode(value)
-        );
-
-        container.appendChild(labelElement);
-    }
+    container.appendChild(paragraph);
 }
 
 
-function displaySignature(data) {
-    signatureResult.replaceChildren();
-    signatureResult.className = "signature-details";
+function displayTransfer(data) {
+    transferResult.replaceChildren();
+    transferResult.className = "signature-details";
 
     addDetail(
-        signatureResult,
+        transferResult,
         "Transaction ID",
-        data.transaction.transaction_id
+        data.transaction_id
     );
 
     addDetail(
-        signatureResult,
+        transferResult,
         "Receiver",
-        data.transaction.receiver
+        data.receiver
     );
 
     addDetail(
-        signatureResult,
+        transferResult,
         "Amount",
-        data.transaction.amount + " EUR"
+        data.amount + " " + data.currency
     );
 
     addDetail(
-        signatureResult,
-        "SHA-256",
-        data.hash,
-        true
-    );
-
-    addDetail(
-        signatureResult,
-        "Signature r",
-        data.signature.r,
-        true
-    );
-
-    addDetail(
-        signatureResult,
-        "Signature s",
-        data.signature.s,
-        true
-    );
-
-    addDetail(
-        signatureResult,
-        "Verification",
-        data.signature_valid ? "VALID" : "INVALID"
-    );
-
-    addDetail(
-        signatureResult,
+        transferResult,
         "Status",
         data.status
     );
@@ -89,76 +52,78 @@ form.addEventListener("submit", async function(event) {
     event.preventDefault();
 
     messageBox.textContent = "";
-    signButton.disabled = true;
+    transferButton.disabled = true;
 
     const receiver = document.getElementById("receiver").value;
     const amountInput = document.getElementById("amount").value;
 
     const amount = Number(amountInput).toFixed(2);
 
-    const transaction = {
-        sender: "BANK",
+    const transfer = {
         receiver: receiver,
         amount: amount,
         currency: "EUR"
     };
 
     try {
-        const response = await fetch("/api/transactions/sign", {
+        const response = await fetch("/api/transfer", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(transaction)
+            body: JSON.stringify(transfer)
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || "Signing failed");
+            throw new Error(data.error || "Transfer request failed");
         }
 
         messageBox.className = "success";
-        messageBox.textContent = "Transaction signed successfully!";
+        messageBox.textContent = data.message;
 
-        displaySignature(data);
+        displayTransfer(data);
 
-        await loadTransactions();
+        await loadTransfers();
 
     } catch (error) {
         messageBox.className = "error";
         messageBox.textContent = error.message;
 
     } finally {
-        signButton.disabled = false;
+        transferButton.disabled = false;
     }
 });
 
 
-async function loadTransactions() {
+async function loadTransfers() {
     try {
-        const response = await fetch("/api/transactions");
+        const response = await fetch("/api/transfers");
 
         if (!response.ok) {
-            throw new Error("Unable to load transactions");
+            throw new Error("Unable to load transfers");
         }
 
         const data = await response.json();
 
-        document.getElementById("totalTransactions").textContent =
+        document.getElementById("totalTransfers").textContent =
             data.count;
 
-        const table = document.getElementById("transactionTable");
+        const table = document.getElementById("transferTable");
+
         table.replaceChildren();
 
-        for (const record of data.transactions.slice().reverse()) {
+        for (const record of data.transfers.slice().reverse()) {
             const row = document.createElement("tr");
 
+            const transaction = record.transaction;
+
             const values = [
-                record.transaction.transaction_id,
-                record.transaction.receiver,
-                record.transaction.amount + " EUR",
-                record.signature_valid ? "VALID" : "INVALID",
+                transaction.transaction_id,
+                transaction.sender,
+                transaction.receiver,
+                transaction.amount + " " + transaction.currency,
                 record.status
             ];
 
@@ -172,9 +137,11 @@ async function loadTransactions() {
         }
 
     } catch (error) {
-        console.error(error);
+        console.error("Transfer history error:", error);
     }
 }
 
 
-loadTransactions();
+refreshButton.addEventListener("click", loadTransfers);
+
+loadTransfers();

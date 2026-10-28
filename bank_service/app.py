@@ -11,7 +11,6 @@ from crypto.ecdsa_sign import (
     hash_transaction,
     export_public_key
 )
-from crypto.ecdsa_verify import verify_transaction
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,27 +18,24 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 
 app = Flask(__name__, static_folder=None)
 
-# Synthetic key pair for this local lab.
-# Regenerated whenever the service restarts.
+# Temporary signing key for Phase 3.
+# Key persistence will be added before cross-service verification.
 private_key, public_key = generate_keys()
 
-# Temporary storage. PostgreSQL comes in Phase 5.
-transactions = []
+# Phase 3 only: temporary pending-transfer records.
+# This is NOT the transaction-processing database.
+pending_transfers = []
 
-ALLOWED_RECEIVERS = {"ALICE", "BOB", "ATTACKER"}
+ALLOWED_RECEIVERS = {"ALICE", "BOB"}
 
 
-def validate_transaction(data):
+def validate_transfer(data):
     if not isinstance(data, dict):
         return None, "Expected a JSON object"
 
-    sender = data.get("sender")
     receiver = data.get("receiver")
-    currency = data.get("currency")
     amount = data.get("amount")
-
-    if sender != "BANK":
-        return None, "Invalid sender"
+    currency = data.get("currency")
 
     if receiver not in ALLOWED_RECEIVERS:
         return None, "Invalid receiver"
@@ -51,7 +47,7 @@ def validate_transaction(data):
         return None, "Amount must be a decimal string"
 
     if not re.fullmatch(r"\d{1,10}\.\d{2}", amount):
-        return None, "Use amount format 100.00"
+        return None, "Amount must use format 100.00"
 
     try:
         value = Decimal(amount)
@@ -63,7 +59,7 @@ def validate_transaction(data):
 
     transaction = {
         "transaction_id": f"TX-{uuid.uuid4().hex[:12].upper()}",
-        "sender": sender,
+        "sender": "BANK",
         "receiver": receiver,
         "amount": amount,
         "currency": currency
@@ -90,7 +86,7 @@ def javascript():
 @app.get("/api/health")
 def health():
     return jsonify({
-        "service": "SecureBank Signing API",
+        "service": "SecureBank API",
         "status": "running",
         "phase": 3
     })
@@ -105,55 +101,56 @@ def get_public_key():
     })
 
 
-@app.post("/api/transactions/sign")
-def create_signed_transaction():
+@app.post("/api/transfer")
+def create_transfer():
     data = request.get_json(silent=True)
 
-    transaction, error = validate_transaction(data)
+    transaction, error = validate_transfer(data)
 
     if error:
         return jsonify({"error": error}), 400
 
+    # Signing happens automatically on the bank backend.
     signature = sign_transaction(private_key, transaction)
 
-    verified = verify_transaction(
-        public_key,
-        transaction,
-        signature
-    )
+    signed_request = {
+        "transaction": transaction,
+        "signature": signature
+    }
+
+    # Phase 4 will forward signed_request to:
+    # POST http://127.0.0.1:5001/api/transactions
+    #
+    # The transaction server will verify the signature
+    # before processing the transfer.
 
     record = {
         "transaction": transaction,
-        "signature": {
-            "algorithm": "ECDSA",
-            "curve": "P-256",
-            **signature
-        },
-        "hash": hash_transaction(transaction),
-        "signature_valid": verified,
-        "status": "SIGNED_NOT_PROCESSED"
+        "status": "PENDING_SERVER_INTEGRATION"
     }
 
-    transactions.append(record)
+    pending_transfers.append(record)
 
-    return jsonify(record), 201
-
-
-@app.get("/api/transactions")
-def list_transactions():
+    # No signature or private key is exposed to the browser.
     return jsonify({
-        "count": len(transactions),
-        "transactions": transactions
+        "transaction_id": transaction["transaction_id"],
+        "receiver": transaction["receiver"],
+        "amount": transaction["amount"],
+        "currency": transaction["currency"],
+        "status": record["status"],
+        "message": (
+            "Transfer request prepared and signed. "
+            "Processing server not connected yet."
+        )
+    }), 202
+
+
+@app.get("/api/transfers")
+def list_transfers():
+    return jsonify({
+        "count": len(pending_transfers),
+        "transfers": pending_transfers
     })
-
-
-@app.get("/api/transactions/<transaction_id>")
-def get_transaction(transaction_id):
-    for record in transactions:
-        if record["transaction"]["transaction_id"] == transaction_id:
-            return jsonify(record)
-
-    return jsonify({"error": "Transaction not found"}), 404
 
 
 if __name__ == "__main__":
