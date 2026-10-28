@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SecureBank | ECDSA Security Lab</title>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="brand">
+            <span class="brand-icon">◆</span>
+            SecureBank
+            <span class="lab-badge">SECURITY LAB</span>
+        </div>
+
+        <div class="nav-right">
+            <span class="status-dot"></span>
+            <span>Bank Signing Service</span>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <section class="hero">
+            <div>
+                <p class="eyebrow">CRYPTOGRAPHIC BANKING PLATFORM</p>
+                <h1>Banking Dashboard</h1>
+                <p class="subtitle">
+                    Secure transaction signing powered by
+                    elliptic-curve digital signatures.
+                </p>
+            </div>
+
+            <div class="mode-badge">
+                ECDSA P-256
+            </div>
+        </section>
+
+        <section class="stats">
+
+            <div class="stat-card">
+                <p>Total Signed Transactions</p>
+                <h2 id="totalTransactions">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <p>Signing Algorithm</p>
+                <h2>ECDSA</h2>
+            </div>
+
+            <div class="stat-card">
+                <p>Elliptic Curve</p>
+                <h2>P-256</h2>
+            </div>
+
+        </section>
+
+        <section class="grid">
+
+            <div class="card">
+
+                <h2>Create Transaction</h2>
+
+                <p class="card-description">
+                    Generate a digitally signed banking transaction.
+                </p>
+
+                <form id="transactionForm">
+
+                    <label>Sender</label>
+                    <input
+                        type="text"
+                        value="BANK"
+                        disabled
+                    >
+
+                    <label>Receiver</label>
+
+                    <select id="receiver" required>
+                        <option value="ALICE">Alice</option>
+                        <option value="BOB">Bob</option>
+                    </select>
+
+                    <label>Amount (EUR)</label>
+
+                    <input
+                        type="number"
+                        id="amount"
+                        min="0.01"
+                        step="0.01"
+                        value="100.00"
+                        required
+                    >
+
+                    <button type="submit" id="signButton">
+                        Sign Transaction
+                    </button>
+
+                </form>
+
+                <div id="message"></div>
+
+            </div>
+
+            <div class="card">
+
+                <h2>Signature Inspector</h2>
+
+                <p class="card-description">
+                    Inspect the latest ECDSA signature.
+                </p>
+
+                <div id="signatureResult" class="empty-state">
+                    No transaction signed yet.
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="card history-card">
+
+            <div class="section-heading">
+                <div>
+                    <h2>Transaction History</h2>
+                    <p class="card-description">
+                        Signed transactions awaiting processing.
+                    </p>
+                </div>
+
+                <button
+                    class="secondary-button"
+                    onclick="loadTransactions()"
+                >
+                    Refresh
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Receiver</th>
+                            <th>Amount</th>
+                            <th>Signature</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="transactionTable">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <footer>
+            SecureBank Lab — Educational Cryptography Project
+            <br>
+            Fictional transactions only. No real money is transferred.
+        </footer>
+
+    </main>
+
+    <script src="/script.js"></script>
+
+</body>
+</html>
