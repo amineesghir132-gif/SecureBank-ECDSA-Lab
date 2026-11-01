@@ -11,7 +11,7 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 
-python3 -m bank_service.app
+
 ------------------------- already used it-----------------------
 sudo chmod +x start.sh
 ./start.sh
