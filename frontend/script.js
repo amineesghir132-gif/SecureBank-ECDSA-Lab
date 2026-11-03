@@ -1,3 +1,4 @@
+
 const form = document.getElementById("transferForm");
 const messageBox = document.getElementById("message");
 const transferResult = document.getElementById("transferResult");
@@ -22,29 +23,102 @@ function displayTransfer(data) {
     transferResult.replaceChildren();
     transferResult.className = "signature-details";
 
-    addDetail(
-        transferResult,
-        "Transaction ID",
-        data.transaction_id
-    );
-
-    addDetail(
-        transferResult,
-        "Receiver",
-        data.receiver
-    );
-
+    addDetail(transferResult, "Transaction ID", data.transaction_id);
+    addDetail(transferResult, "Receiver", data.receiver);
     addDetail(
         transferResult,
         "Amount",
         data.amount + " " + data.currency
     );
+    addDetail(transferResult, "Status", data.status);
+}
 
-    addDetail(
-        transferResult,
-        "Status",
-        data.status
-    );
+
+async function loadAccounts() {
+    try {
+        const response = await fetch("/api/accounts");
+
+        if (!response.ok) {
+            throw new Error("Unable to load accounts");
+        }
+
+        const data = await response.json();
+
+        // Store the latest balances for future dashboard features.
+        window.secureBankAccounts = data.accounts;
+
+        // Update existing account elements if they are present.
+        for (const account of data.accounts) {
+            const element = document.getElementById(
+                "balance-" + account.username.toLowerCase()
+            );
+
+            if (element) {
+                element.textContent =
+                    Number(account.balance).toLocaleString(
+                        "en-US",
+                        {
+                            style: "currency",
+                            currency: account.currency
+                        }
+                    );
+            }
+        }
+
+    } catch (error) {
+        console.error("Account loading error:", error);
+    }
+}
+
+
+async function loadTransfers() {
+    try {
+        const response = await fetch("/api/transfers");
+
+        if (!response.ok) {
+            throw new Error("Unable to load transfers");
+        }
+
+        const data = await response.json();
+
+        document.getElementById("totalTransfers").textContent =
+            data.count;
+
+        const table = document.getElementById("transferTable");
+        table.replaceChildren();
+
+        // PostgreSQL already returns newest transactions first.
+        for (const transaction of data.transfers) {
+            const row = document.createElement("tr");
+
+            const values = [
+                transaction.transaction_id,
+                transaction.sender,
+                transaction.receiver,
+                transaction.amount + " " + transaction.currency,
+                transaction.status
+            ];
+
+            for (const value of values) {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            }
+
+            table.appendChild(row);
+        }
+
+    } catch (error) {
+        console.error("Transfer history error:", error);
+    }
+}
+
+
+async function refreshDashboard() {
+    await Promise.all([
+        loadAccounts(),
+        loadTransfers()
+    ]);
 }
 
 
@@ -77,7 +151,9 @@ form.addEventListener("submit", async function(event) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || "Transfer request failed");
+            throw new Error(
+                data.error || data.message || "Transfer request failed"
+            );
         }
 
         messageBox.className = "success";
@@ -85,7 +161,8 @@ form.addEventListener("submit", async function(event) {
 
         displayTransfer(data);
 
-        await loadTransfers();
+        // Refresh balances and history after successful transfer.
+        await refreshDashboard();
 
     } catch (error) {
         messageBox.className = "error";
@@ -97,51 +174,8 @@ form.addEventListener("submit", async function(event) {
 });
 
 
-async function loadTransfers() {
-    try {
-        const response = await fetch("/api/transfers");
+refreshButton.addEventListener("click", refreshDashboard);
 
-        if (!response.ok) {
-            throw new Error("Unable to load transfers");
-        }
+// Load real PostgreSQL data when the page opens.
+refreshDashboard();
 
-        const data = await response.json();
-
-        document.getElementById("totalTransfers").textContent =
-            data.count;
-
-        const table = document.getElementById("transferTable");
-
-        table.replaceChildren();
-
-        for (const record of data.transfers.slice().reverse()) {
-            const row = document.createElement("tr");
-
-            const transaction = record.transaction;
-
-            const values = [
-                transaction.transaction_id,
-                transaction.sender,
-                transaction.receiver,
-                transaction.amount + " " + transaction.currency,
-                record.status
-            ];
-
-            for (const value of values) {
-                const cell = document.createElement("td");
-                cell.textContent = value;
-                row.appendChild(cell);
-            }
-
-            table.appendChild(row);
-        }
-
-    } catch (error) {
-        console.error("Transfer history error:", error);
-    }
-}
-
-
-refreshButton.addEventListener("click", loadTransfers);
-
-loadTransfers();

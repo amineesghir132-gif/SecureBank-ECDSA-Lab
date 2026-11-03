@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,12 +48,12 @@
 
             <div class="stat-card">
                 <p>Available Balance</p>
-                <h2>Coming Soon</h2>
-                <p>Connected in Phase 5</p>
+                <h2 id="balance-bank">Loading...</h2>
+                <p>Live PostgreSQL balance</p>
             </div>
 
             <div class="stat-card">
-                <p>Transfer Requests</p>
+                <p>Completed Transfers</p>
                 <h2 id="totalTransfers">0</h2>
             </div>
 
@@ -127,7 +128,7 @@
                 <div>
                     <h2>Transfer History</h2>
                     <p class="card-description">
-                        Transfer requests submitted to SecureBank.
+                        Completed transactions stored in PostgreSQL.
                     </p>
                 </div>
 
@@ -169,3 +170,4 @@
     <script src="/script.js"></script>
 </body>
 </html>
+
