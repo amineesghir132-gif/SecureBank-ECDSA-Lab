@@ -10,8 +10,25 @@ python3 -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-
-
+sudo systemctl start postgresql
+sudo -u postgres psql
+>inside postegres
+CREATE USER zaza WITH PASSWORD 'zaza';
+CREATE DATABASE securebank_db OWNER zaza;
+\q
+>Then, from the project directory:
+PGPASSWORD='zaza' psql \
+  -h 127.0.0.1 \
+  -U zaza \
+  -d securebank_db \
+  -v ON_ERROR_STOP=1 \
+  -f database/securebank_full.sql
+#verify the database using:
+PGPASSWORD='zaza' psql \
+  -h 127.0.0.1 \
+  -U zaza \
+  -d securebank_db \
+  -c "SELECT u.username, a.account_number, a.balance FROM users u JOIN accounts a ON a.user_id = u.id;"
 ------------------------- already used it-----------------------
 sudo chmod +x start.sh
 ./start.sh
@@ -72,3 +89,4 @@ PostgreSQL (port 5432)
        +-- accounts
        +-- transactions
        +-- audit_logs
+ 
