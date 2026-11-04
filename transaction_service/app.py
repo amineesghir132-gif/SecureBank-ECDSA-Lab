@@ -28,10 +28,11 @@ def health():
     return jsonify({
         "service": "SecureBank Transaction Server",
         "status": "running",
-        "phase": 5
+        "phase": 6
     })
 
 
+# Receive and verify ECDSA-signed transactions.
 @app.post("/api/transactions")
 def receive_transaction():
     payload = request.get_json(silent=True)
@@ -44,7 +45,7 @@ def receive_transaction():
     return jsonify(result), status_code
 
 
-# Retrieve account balances from PostgreSQL.
+# Return the account directory without exposing balances.
 @app.get("/api/accounts")
 def get_accounts():
     with get_connection() as conn:
@@ -53,7 +54,6 @@ def get_accounts():
                 SELECT
                     u.username,
                     a.account_number,
-                    a.balance,
                     a.currency
                 FROM accounts a
                 JOIN users u ON a.user_id = u.id
@@ -66,10 +66,9 @@ def get_accounts():
         {
             "username": username,
             "account_number": account_number,
-            "balance": str(balance),
             "currency": currency
         }
-        for username, account_number, balance, currency in rows
+        for username, account_number, currency in rows
     ]
 
     return jsonify({
@@ -78,9 +77,16 @@ def get_accounts():
     })
 
 
-# Retrieve completed transactions from PostgreSQL.
+# Return transactions involving the specified user.
 @app.get("/api/transactions")
 def list_transactions():
+    user_id = request.args.get("user_id", type=int)
+
+    if user_id is None or user_id <= 0:
+        return jsonify({
+            "error": "Valid user_id is required"
+        }), 400
+
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -101,9 +107,11 @@ def list_transactions():
                     ON t.receiver_account_id = ra.id
                 JOIN users receiver
                     ON ra.user_id = receiver.id
+                WHERE sa.user_id = %s
+                   OR ra.user_id = %s
                 ORDER BY t.created_at DESC
                 LIMIT 100
-            """)
+            """, (user_id, user_id))
 
             rows = cursor.fetchall()
 

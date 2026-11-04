@@ -19,7 +19,14 @@
 
         <div class="nav-right">
             <span class="status-dot"></span>
-            <span>Banking Portal</span>
+            <span id="navUsername">Banking Portal</span>
+            <button
+                type="button"
+                class="secondary-button"
+                id="logoutButton"
+            >
+                Logout
+            </button>
         </div>
     </header>
 
@@ -43,12 +50,13 @@
 
             <div class="stat-card">
                 <p>Account</p>
-                <h2>BANK</h2>
+                <h2 id="currentUsername">Loading...</h2>
+                <p id="accountNumber">Loading account...</p>
             </div>
 
             <div class="stat-card">
                 <p>Available Balance</p>
-                <h2 id="balance-bank">Loading...</h2>
+                <h2 id="currentBalance">Loading...</h2>
                 <p>Live PostgreSQL balance</p>
             </div>
 
@@ -75,14 +83,13 @@
                     <input
                         type="text"
                         id="sender"
-                        value="BANK"
+                        value="Loading..."
                         disabled
                     >
 
                     <label for="receiver">To Account</label>
-                    <select id="receiver" required>
-                        <option value="ALICE">Alice</option>
-                        <option value="BOB">Bob</option>
+                    <select id="receiver" required disabled>
+                        <option value="">Loading recipients...</option>
                     </select>
 
                     <label for="amount">Amount (EUR)</label>
@@ -94,9 +101,10 @@
                         step="0.01"
                         value="100.00"
                         required
+                        disabled
                     >
 
-                    <button type="submit" id="transferButton">
+                    <button type="submit" id="transferButton" disabled>
                         Transfer Money
                     </button>
 
@@ -128,7 +136,7 @@
                 <div>
                     <h2>Transfer History</h2>
                     <p class="card-description">
-                        Completed transactions stored in PostgreSQL.
+                        Transactions involving your account.
                     </p>
                 </div>
 

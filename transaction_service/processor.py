@@ -70,13 +70,18 @@ def process_signed_transaction(public_key, payload):
         return {"error": "Invalid transaction ID"}, 400
 
     # Lab authorization policy:
-    # Only BANK -> ALICE/BOB transfers are currently allowed.
-    # A valid signature alone is not sufficient authorization.
-    if sender != "BANK" or receiver not in {"ALICE", "BOB"}:
+    # Validate sender and receiver
+    if not isinstance(sender, str) or not isinstance(receiver, str):
         return {
-            "status": "REJECTED",
-            "error": "Unauthorized transfer"
-        }, 403
+        "status": "REJECTED",
+        "error": "Invalid sender or receiver"
+        }, 400
+
+    if sender == receiver:
+        return {
+        "status": "REJECTED",
+        "error": "Cannot transfer money to the same account"
+        }, 400
 
     if currency != "EUR" or not isinstance(amount_str, str):
         return {"error": "Invalid currency or amount"}, 400

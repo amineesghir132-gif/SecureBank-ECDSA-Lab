@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureBank | Login</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .auth-container {
+            max-width: 430px;
+            margin: 90px auto;
+            padding: 36px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .08);
+        }
+
+        .auth-container h1 {
+            margin-bottom: 12px;
+        }
+
+        .auth-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-container input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .auth-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .auth-error {
+            color: #b42318;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="brand">
+            <span class="brand-icon">◆</span>
+            SecureBank
+            <span class="lab-badge">DEMO BANK</span>
+        </div>
+    </header>
+
+    <main class="auth-container">
+        <h1>Welcome Back</h1>
+        <p>Sign in to your SecureBank account.</p>
+
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input
+                id="username"
+                name="username"
+                type="text"
+                autocomplete="username"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button type="submit" id="loginButton">
+                Sign In
+            </button>
+        </form>
+
+        <p id="loginMessage" class="auth-error" role="alert"></p>
+
+        <div class="auth-footer">
+            Don't have an account?
+            <a href="/register">Create Account</a>
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById("loginForm");
+        const button = document.getElementById("loginButton");
+        const message = document.getElementById("loginMessage");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            button.disabled = true;
+            message.textContent = "";
+
+            try {
+                const response = await fetch("/api/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        username: document.getElementById("username").value,
+                        password: document.getElementById("password").value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Login failed");
+                }
+
+                window.location.href = "/";
+
+            } catch (error) {
+                message.textContent = error.message;
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
