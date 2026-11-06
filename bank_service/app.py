@@ -26,7 +26,7 @@ from bank_service.auth import (
     get_connection
 )
 from crypto.ecdsa_sign import sign_transaction, export_public_key
-
+from crypto.vulnerable_signer import VulnerableSigner
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -75,7 +75,7 @@ with open(PRIVATE_KEY_PATH, "rb") as key_file:
     )
 
 public_key = private_key.public_key()
-
+vulnerable_signer = VulnerableSigner(private_key)
 
 # Existing transaction history compatibility
 pending_transfers = []
@@ -334,7 +334,17 @@ def create_transfer():
     if error:
         return jsonify({"error": error}), 400
 
-    signature = sign_transaction(private_key, transaction)
+    # ECDSA signing mode: secure by default.
+    signing_mode = os.environ.get(
+    "SECUREBANK_SIGNING_MODE", "secure"
+     ).lower()
+
+    if signing_mode == "vulnerable":
+        signature = vulnerable_signer.sign_transaction(transaction)
+        print("[ECDSA] VULNERABLE MODE: reused nonce", flush=True)
+    else:
+        signature = sign_transaction(private_key, transaction)
+        print("[ECDSA] SECURE MODE", flush=True)
 
     signed_request = {
         "transaction": transaction,

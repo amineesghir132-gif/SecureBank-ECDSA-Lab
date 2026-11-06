@@ -1,6 +1,6 @@
 
 from pathlib import Path
-
+from datetime import datetime, timezone
 from flask import Flask, jsonify, request
 from cryptography.hazmat.primitives import serialization
 
@@ -30,8 +30,96 @@ def health():
         "status": "running",
         "phase": 6
     })
+# --------------------------------------------------
+# LAB ONLY: API structure discovery
+# --------------------------------------------------
 
+@app.get("/api/status")
+def api_status():
 
+    return jsonify({
+        "status": "online",
+        "service": "SecureBank Transaction API",
+        "transaction": {
+            "transaction_id": "TX-XXXXXXXXXXXX",
+            "sender": None,
+            "receiver": None,
+            "amount": None,
+            "currency": None
+        },
+        "signature": {
+            "r": None,
+            "s": None
+        }
+    })
+# --------------------------------------------------
+# LAB ONLY: Expose signed transactions
+# --------------------------------------------------
+
+@app.get("/api/lab/signature-feed")
+def signature_feed():
+
+    since = request.args.get("since")
+
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+
+            if since:
+                cursor.execute("""
+                    SELECT
+                        t.transaction_id,
+                        sender.username,
+                        receiver.username,
+                        t.amount,
+                        t.currency,
+                        t.signature_r,
+                        t.signature_s
+                    FROM transactions t
+                    JOIN accounts sa
+                        ON sa.id = t.sender_account_id
+                    JOIN users sender
+                        ON sender.id = sa.user_id
+                    JOIN accounts ra
+                        ON ra.id = t.receiver_account_id
+                    JOIN users receiver
+                        ON receiver.id = ra.user_id
+                    WHERE t.signature_r IS NOT NULL
+                      AND t.signature_s IS NOT NULL
+                      AND t.created_at >= %s
+                    ORDER BY t.created_at ASC
+                    LIMIT 500
+                """, (since,))
+
+            else:
+                return jsonify({
+                    "error": "Missing since parameter"
+                }), 400
+
+            rows = cursor.fetchall()
+
+    transactions = []
+
+    for row in rows:
+        tx_id, sender, receiver, amount, currency, r, s = row
+
+        transactions.append({
+            "transaction": {
+                "transaction_id": tx_id,
+                "sender": sender,
+                "receiver": receiver,
+                "amount": str(amount),
+                "currency": currency
+            },
+            "signature": {
+                "r": str(r),
+                "s": str(s)
+            }
+        })
+
+    return jsonify({
+        "count": len(transactions),
+        "transactions": transactions
+    })
 # Receive and verify ECDSA-signed transactions.
 @app.post("/api/transactions")
 def receive_transaction():
