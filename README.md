@@ -55,11 +55,11 @@ sudo chmod +x start.sh
 - Duplicate transaction-ID checks
 - Transaction history and audit logging
 - Banking frontend with account dashboard
-
-### Planned
-
 - Vulnerable ECDSA signer using repeated nonces
 - Recovery of the ECDSA private key from two signatures
+
+  
+  ### Planned
 - Demonstration of a forged signed transaction
 - Comparison with secure nonce generation
 - Security analysis and mitigation demonstration
