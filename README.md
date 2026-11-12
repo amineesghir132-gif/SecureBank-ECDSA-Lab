@@ -57,10 +57,11 @@ sudo chmod +x start.sh
 - Banking frontend with account dashboard
 - Vulnerable ECDSA signer using repeated nonces
 - Recovery of the ECDSA private key from two signatures
-
-  
-  ### Planned
 - Demonstration of a forged signed transaction
+
+
+
+ ### Planned
 - Comparison with secure nonce generation
 - Security analysis and mitigation demonstration
 
