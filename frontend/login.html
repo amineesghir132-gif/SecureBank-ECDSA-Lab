@@ -5,44 +5,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank | Login</title>
-    <link rel="stylesheet" href="/style.css">
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at 50% 45%,
+                    rgba(56, 189, 248, 0.09),
+                    transparent 40%),
+                #0b1120;
+            color: #f1f5f9;
+        }
+
+        /* NAVBAR */
+
+        .navbar {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 6%;
+            background: #111c30;
+            border-bottom: 1px solid #293850;
+        }
+
+        .brand {
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .brand-icon {
+            color: #38bdf8;
+            margin-right: 8px;
+        }
+
+        .lab-badge {
+            font-size: 9px;
+            background: #164e63;
+            color: #67e8f9;
+            padding: 5px 8px;
+            border-radius: 5px;
+            margin-left: 9px;
+            letter-spacing: 1px;
+        }
+
+        /* LOGIN CONTAINER */
+
+        .auth-wrapper {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 35px 20px;
+        }
+
         .auth-container {
-            max-width: 430px;
-            margin: 90px auto;
-            padding: 36px;
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, .08);
+            width: 100%;
+            max-width: 410px;
+            padding: 34px;
+            background: #111c30;
+            border: 1px solid #293850;
+            border-radius: 13px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
+        }
+
+        .auth-icon {
+            width: 43px;
+            height: 43px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border-radius: 10px;
+            font-size: 21px;
+            margin-bottom: 22px;
         }
 
         .auth-container h1 {
-            margin-bottom: 12px;
+            color: #f1f5f9;
+            font-size: 26px;
+            margin: 0 0 9px;
         }
+
+        .auth-description {
+            color: #94a3b8;
+            font-size: 14px;
+            margin: 0 0 27px;
+            line-height: 1.5;
+        }
+
+        /* FORM */
 
         .auth-container form {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 11px;
+            margin: 0;
+        }
+
+        .auth-container label {
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
         }
 
         .auth-container input {
             width: 100%;
-            box-sizing: border-box;
+            padding: 13px 14px;
+            background: #0b1120;
+            border: 1px solid #293850;
+            border-radius: 7px;
+            color: #f1f5f9;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .auth-container input::placeholder {
+            color: #64748b;
+        }
+
+        .auth-container input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.12);
+        }
+
+        .auth-container button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 8px;
+            background: #38bdf8;
+            color: #082032;
+            border: none;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .auth-container button:hover {
+            background: #7dd3fc;
+            opacity: 1;
+        }
+
+        .auth-container button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* MESSAGES AND FOOTER */
+
+        .auth-error {
+            color: #f87171;
+            font-size: 13px;
+            min-height: 16px;
+            margin: 12px 0 0;
         }
 
         .auth-footer {
-            margin-top: 20px;
             text-align: center;
+            border-top: 1px solid #293850;
+            margin-top: 23px;
+            padding-top: 20px;
+            color: #94a3b8;
+            font-size: 13px;
         }
 
-        .auth-error {
-            color: #b42318;
-            margin-top: 14px;
+        .auth-footer a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-bottom {
+            text-align: center;
+            margin-top: 23px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 27px 22px;
+            }
+
+            .navbar {
+                padding: 0 20px;
+            }
         }
     </style>
 </head>
+
 <body>
+
     <header class="navbar">
         <div class="brand">
             <span class="brand-icon">◆</span>
@@ -51,40 +218,59 @@
         </div>
     </header>
 
-    <main class="auth-container">
-        <h1>Welcome Back</h1>
-        <p>Sign in to your SecureBank account.</p>
+    <main class="auth-wrapper">
 
-        <form id="loginForm">
-            <label for="username">Username</label>
-            <input
-                id="username"
-                name="username"
-                type="text"
-                autocomplete="username"
-                required
-            >
+        <section class="auth-container">
 
-            <label for="password">Password</label>
-            <input
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                required
-            >
+            <div class="auth-icon">◆</div>
 
-            <button type="submit" id="loginButton">
-                Sign In
-            </button>
-        </form>
+            <h1>Welcome Back</h1>
 
-        <p id="loginMessage" class="auth-error" role="alert"></p>
+            <p class="auth-description">
+                Sign in to your SecureBank account.
+            </p>
 
-        <div class="auth-footer">
-            Don't have an account?
-            <a href="/register">Create Account</a>
-        </div>
+            <form id="loginForm">
+
+                <label for="username">Username</label>
+                <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit" id="loginButton">
+                    Sign In
+                </button>
+
+            </form>
+
+            <p id="loginMessage" class="auth-error" role="alert"></p>
+
+            <div class="auth-footer">
+                Don't have an account?
+                <a href="/register">Create Account</a>
+            </div>
+
+            <div class="auth-bottom">
+                ◆ SecureBank Cryptographic Security Lab
+            </div>
+
+        </section>
+
     </main>
 
     <script>
@@ -126,5 +312,6 @@
             }
         });
     </script>
+
 </body>
 </html>
