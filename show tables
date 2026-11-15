@@ -1,0 +1,9 @@
+ id | username |                                                                           password_hash                                                                            |          created_at           
+----+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------
+  2 | ALICE    | scrypt:32768:8:1$D2JjMaUuJCx0s6lP$06ac677300e566a2177eb5a32d6ccf90d4331be8a99fd5b8c2c7ce87b41516249e31542ad4307a77bb87d4a1583fde74ef2c290bc48b11c62ba35d414981137c | 2026-11-03 19:06:21.864152+00
+  3 | BOB      | scrypt:32768:8:1$nIfaPZ5ifnBmjxT5$d7f837111545e27279deb9be79a1cdbb72244bd27f92226af9b7d47756df28b08f98fbe31d89d2114c9c2d6f93461ed8b32892cace050f15da97c32f7c278a43 | 2026-11-03 19:06:21.864152+00
+  4 | ATTACKER | scrypt:32768:8:1$mV0jIKXxP9TEqAGF$98219c648635125695d1263aa7accbf10be13b75a09b1ff9d9e2aa75698fbfd2baeb69c0bf05952d525c7e625dbfb4b7abdd4895f7919c7cee4f405bc43f6373 | 2026-11-03 19:06:21.864152+00
+  5 | CHARLIE  | scrypt:32768:8:1$JfqZTZt9SVLnlOaV$3a21112675ed8dd39993b1754402d43d9a3f6c0ccc46bf21d7d6e3b50a1bfac2e9b773d16f59c3e7c652295841132861b8bc2d60b22d3d02d8f252468a14bc8b | 2026-11-03 23:32:36.434927+00
+  1 | BANK     | scrypt:32768:8:1$7aPiWSfSWlf9Ghpr$6466a9f629f9bb7abcc02a2417e81d1498938260ac1141d2cb661183582c1d046e1e6081e26d7334260197c42ae29ae30f23e363ffd54f37cc78559473cd60e0 | 2026-11-03 19:06:21.864152+00
+(5 rows)
+

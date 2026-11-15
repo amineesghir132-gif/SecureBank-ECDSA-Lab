@@ -23,6 +23,19 @@ with open(PUBLIC_KEY_PATH, "rb") as key_file:
     )
 
 
+
+from functools import wraps
+from flask import session, jsonify
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("user_id"):
+            return jsonify({"error": "Unauthorized"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+# there it goes all the apis
 @app.get("/api/health")
 def health():
     return jsonify({
@@ -122,6 +135,7 @@ def signature_feed():
     })
 # Receive and verify ECDSA-signed transactions.
 @app.post("/api/transactions")
+
 def receive_transaction():
     payload = request.get_json(silent=True)
 

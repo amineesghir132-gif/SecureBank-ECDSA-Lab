@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SecureBank | Create Account</title>
+    <link rel="stylesheet" href="/style.css">
+
+    <style>
+        .auth-container {
+            max-width: 430px;
+            margin: 90px auto;
+            padding: 36px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .08);
+        }
+
+        .auth-container h1 {
+            margin-bottom: 12px;
+        }
+
+        .auth-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-container input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .auth-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .auth-message {
+            margin-top: 14px;
+        }
+
+        .auth-error {
+            color: #b42318;
+        }
+
+        .auth-success {
+            color: #16803c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="brand">
+            <span class="brand-icon">◆</span>
+            SecureBank
+            <span class="lab-badge">DEMO BANK</span>
+        </div>
+    </header>
+
+    <main class="auth-container">
+
+        <h1>Create Account</h1>
+
+        <p>Open your simulated SecureBank account.</p>
+
+        <form id="registerForm">
+
+            <label for="username">Username</label>
+
+            <input
+                id="username"
+                name="username"
+                type="text"
+                minlength="3"
+                maxlength="50"
+                pattern="[A-Za-z][A-Za-z0-9_]*"
+                autocomplete="username"
+                placeholder="Choose a username"
+                required
+            >
+
+            <label for="password">Password</label>
+
+            <input
+                id="password"
+                name="password"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                placeholder="Create a password"
+                required
+            >
+
+            <label for="confirmPassword">Confirm Password</label>
+
+            <input
+                id="confirmPassword"
+                name="confirm_password"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                placeholder="Repeat your password"
+                required
+            >
+
+            <button type="submit" id="registerButton">
+                Create Account
+            </button>
+
+        </form>
+
+        <p
+            id="registerMessage"
+            class="auth-message"
+            role="status"
+            aria-live="polite"
+        ></p>
+
+        <div class="auth-footer">
+            Already have an account?
+            <a href="/login">Sign In</a>
+        </div>
+
+    </main>
+
+    <script>
+        const form = document.getElementById("registerForm");
+        const button = document.getElementById("registerButton");
+        const message = document.getElementById("registerMessage");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            message.textContent = "";
+            message.className = "auth-message";
+
+            const username =
+                document.getElementById("username").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
+            const confirmPassword =
+                document.getElementById("confirmPassword").value;
+
+            if (password !== confirmPassword) {
+                message.textContent = "Passwords do not match.";
+                message.classList.add("auth-error");
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = "Creating Account...";
+
+            try {
+                const response = await fetch("/api/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        confirm_password: confirmPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Registration failed");
+                }
+
+                message.classList.add("auth-success");
+
+                message.textContent =
+                    "Account created! Your account number is " +
+                    data.account_number +
+                    ". Redirecting to login...";
+
+                form.reset();
+
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 2500);
+
+            } catch (error) {
+                message.classList.add("auth-error");
+                message.textContent = error.message;
+
+            } finally {
+                button.disabled = false;
+                button.textContent = "Create Account";
+            }
+        });
+    </script>
+
+</body>
+</html>

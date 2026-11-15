@@ -144,10 +144,23 @@ def validate_transfer(data, customer):
     }
 
     return transaction, None
+from functools import wraps
+from flask import session, jsonify
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("user_id"):
+            return jsonify({"error": "Unauthorized"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
 
 # --------------------------------------------------
 # Current authenticated customer
 # --------------------------------------------------
+
 
 def get_current_customer():
     user_id = session.get("user_id")
@@ -219,6 +232,12 @@ def login_page():
         return redirect(url_for("index"))
 
     return send_from_directory(FRONTEND_DIR, "login.html")
+@app.get("/register")
+def register_page():
+    if get_current_customer() is not None:
+        return redirect(url_for("index"))
+
+    return send_from_directory(FRONTEND_DIR, "register.html")
 
 
 @app.get("/style.css")
@@ -316,6 +335,7 @@ def logout():
 # --------------------------------------------------
 
 @app.post("/api/transfer")
+@login_required
 def create_transfer():
     customer = get_current_customer()
 
@@ -402,6 +422,7 @@ def create_transfer():
 # --------------------------------------------------
 
 @app.get("/api/accounts")
+@login_required
 def list_accounts():
     customer = get_current_customer()
 
@@ -441,6 +462,7 @@ def list_accounts():
 # --------------------------------------------------
 
 @app.get("/api/transfers")
+@login_required
 def list_transfers():
     customer = get_current_customer()
 
@@ -471,6 +493,7 @@ def list_transfers():
 
 
 @app.get("/api/session")
+@login_required
 def inspect_session():
     customer = get_current_customer()
 
