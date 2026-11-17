@@ -1,0 +1,20 @@
+sudo docker compose exec bank_service printenv SECUREBANK_SIGNING_MODE
+
+You can switch between secure and vulnerable whenever you want.
+
+The easiest workflow is:
+
+1. Edit .env:
+2. change:SECUREBANK_SIGNING_MODE=secure
+3. sudo docker compose up -d --force-recreate bank_service
+For your SecureBank project
+- First launch or after changing Docker configuration:
+sudo docker compose up -d
+After simply stopping the containers:
+sudo docker compose start
+**After editing .env (e.g. changing signing mode):
+sudo docker compose up -d --force-recreate bank_service
+Important: up -d does not necessarily rebuild your images. If you
+modify Python source code and want those changes included in the image, use:
+sudo docker compose up -d --build
+sudo docker compose logs -f bank_service

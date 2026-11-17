@@ -17,7 +17,7 @@ def get_connection():
         )
 
     return psycopg.connect(
-        host="127.0.0.1",
+        host=os.environ.get("SECUREBANK_DB_HOST", "127.0.0.1"),
         port=5432,
         dbname="securebank_db",
         user="zaza",

@@ -32,7 +32,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 PRIVATE_KEY_PATH = BASE_DIR / "keys" / "bank_private.pem"
 
-TRANSACTION_SERVER_URL = "http://127.0.0.1:5001/api/transactions"
+TRANSACTION_SERVER_BASE_URL = os.environ.get(
+    "SECUREBANK_TRANSACTION_BASE_URL",
+    "http://127.0.0.1:5001"
+)
+
+TRANSACTION_SERVER_URL = (
+    f"{TRANSACTION_SERVER_BASE_URL}/api/transactions"
+)
 
 app = Flask(__name__, static_folder=None)
 
@@ -433,9 +440,9 @@ def list_accounts():
 
     try:
         response = requests.get(
-            "http://127.0.0.1:5001/api/accounts",
-            timeout=5
-        )
+   			 f"{TRANSACTION_SERVER_BASE_URL}/api/accounts",
+   			 timeout=5
+		   )
 
         response.raise_for_status()
         data = response.json()
@@ -472,11 +479,11 @@ def list_transfers():
         }), 401
 
     try:
-        response = requests.get(
-            "http://127.0.0.1:5001/api/transactions",
-            params={"user_id": customer["user_id"]},
-            timeout=5
-        )
+        response = response = requests.get(
+   		 f"{TRANSACTION_SERVER_BASE_URL}/api/transactions",
+   		 params={"user_id": customer["user_id"]},
+   		 timeout=5
+	)
 
         response.raise_for_status()
         data = response.json()
@@ -513,7 +520,7 @@ def inspect_session():
 
 if __name__ == "__main__":
     app.run(
-        host="127.0.0.1",
+        host=os.environ.get("SECUREBANK_HOST", "127.0.0.1"),
         port=5000,
         debug=False
     )

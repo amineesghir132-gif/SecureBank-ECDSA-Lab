@@ -1,0 +1,67 @@
+
+services:
+  db:
+    image: postgres:18
+    container_name: securebank_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: securebank_db
+      POSTGRES_USER: zaza
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./database/securebank_full.sql:/docker-entrypoint-initdb.d/01-securebank.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zaza -d securebank_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  transaction_service:
+    build: .
+    container_name: securebank_transaction
+    restart: unless-stopped
+    command: python -m transaction_service.app
+    environment:
+      SECUREBANK_DB_HOST: db
+      SECUREBANK_DB_PASSWORD: ${SECUREBANK_DB_PASSWORD}
+      SECUREBANK_HOST: 0.0.0.0
+    volumes:
+      - ./keys/bank_public.pem:/app/keys/bank_public.pem:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/api/health')"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bank_service:
+    build: .
+    container_name: securebank_bank
+    restart: unless-stopped
+    command: python -m bank_service.app
+    environment:
+      SECUREBANK_DB_HOST: db
+      SECUREBANK_DB_PASSWORD: ${SECUREBANK_DB_PASSWORD}
+      SECUREBANK_SESSION_SECRET: ${SECUREBANK_SESSION_SECRET}
+      SECUREBANK_SIGNING_MODE: ${SECUREBANK_SIGNING_MODE:-secure}
+      SECUREBANK_HOST: 0.0.0.0
+      SECUREBANK_TRANSACTION_BASE_URL: http://transaction_service:5001
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      transaction_service:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

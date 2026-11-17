@@ -1,4 +1,4 @@
-
+import os
 from pathlib import Path
 from datetime import datetime, timezone
 from flask import Flask, jsonify, request
@@ -246,7 +246,7 @@ def list_transactions():
 
 if __name__ == "__main__":
     app.run(
-        host="127.0.0.1",
+        host=os.environ.get("SECUREBANK_HOST", "127.0.0.1"),
         port=5001,
         debug=False
     )
