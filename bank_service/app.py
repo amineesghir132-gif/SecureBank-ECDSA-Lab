@@ -23,7 +23,9 @@ from cryptography.hazmat.primitives import serialization
 from bank_service.auth import (
     register_user,
     authenticate_user,
-    get_connection
+    get_connection,
+    deactivate_user,
+    activate_user
 )
 from crypto.ecdsa_sign import sign_transaction, export_public_key
 from crypto.vulnerable_signer import VulnerableSigner
@@ -159,9 +161,21 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if not session.get("user_id"):
             return jsonify({"error": "Unauthorized"}), 401
+
         return f(*args, **kwargs)
     return decorated
 
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("user_id"):
+            return jsonify({"error": "Unauthorized"}), 401
+
+        if session.get("role") != "admin":
+            return jsonify({"error": "Administrator access required"}), 403
+
+        return f(*args, **kwargs)
+    return decorated
 
 
 # --------------------------------------------------
@@ -182,7 +196,8 @@ def get_current_customer():
                 SELECT
                     u.id,
                     u.username,
-                    a.id,
+                    u.role,
+		    a.id,
                     a.account_number,
                     a.currency,
                     a.balance
@@ -203,13 +218,14 @@ def get_current_customer():
         return None
 
     return {
-        "user_id": customer[0],
-        "username": customer[1],
-        "account_id": customer[2],
-        "account_number": customer[3],
-        "currency": customer[4],
-        "balance": str(customer[5])
-    }
+    "user_id": customer[0],
+    "username": customer[1],
+    "role": customer[2],
+    "account_id": customer[3],
+    "account_number": customer[4],
+    "currency": customer[5],
+    "balance": str(customer[6])
+     }
 
 
 # --------------------------------------------------
@@ -306,6 +322,8 @@ def login():
     session.clear()
     session.permanent = True
     session["user_id"] = result["user_id"]
+    session["username"] = result["username"]
+    session["role"] = result["role"]
 
     return jsonify({
         "message": "Login successful",
@@ -516,6 +534,53 @@ def inspect_session():
         "user_id": customer["user_id"],
         "account_number": customer["account_number"],
         "session_permanent": session.permanent
+    }), 200
+@app.get("/api/admin/users")
+@admin_required
+def list_users():
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, username, role, is_active
+                FROM users
+                ORDER BY id
+            """)
+            rows = cursor.fetchall()
+
+    users = [
+        {
+            "id": row[0],
+            "username": row[1],
+            "role": row[2],
+            "is_active": row[3]
+        }
+        for row in rows
+    ]
+
+    return jsonify({"users": users}), 200
+@app.delete("/api/admin/users/<int:user_id>")
+@admin_required
+def delete_user(user_id):
+    success, result = deactivate_user(user_id)
+
+    if not success:
+        return jsonify({"error": result}), 404
+
+    return jsonify({
+        "message": "User deactivated successfully",
+        "user": result
+    }), 200
+@app.post("/api/admin/users/<int:user_id>/activate")
+@admin_required
+def restore_user(user_id):
+    success, result = activate_user(user_id)
+
+    if not success:
+        return jsonify({"error": result}), 404
+
+    return jsonify({
+        "message": "User activated successfully",
+        "user": result
     }), 200
 
 if __name__ == "__main__":

@@ -166,11 +166,49 @@
             </div>
 
         </section>
+<section class="card history-card" id="adminPanel" hidden>
 
+    <div class="section-heading">
+        <div>
+            <h2>User Management</h2>
+            <p class="card-description">
+                Manage registered SecureBank customers.
+            </p>
+        </div>
+
+        <button
+            class="secondary-button"
+            id="refreshUsersButton"
+            type="button"
+        >
+            Refresh Users
+        </button>
+    </div>
+
+    <div id="userManagementMessage" role="status"></div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="usersTable"></tbody>
+        </table>
+    </div>
+
+</section>
         <footer>
             SecureBank — Educational Banking Simulation
             <br>
             No real accounts or money transfers.
+
         </footer>
 
     </main>

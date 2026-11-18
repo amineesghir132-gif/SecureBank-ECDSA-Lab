@@ -28,6 +28,8 @@ services:
       SECUREBANK_HOST: 0.0.0.0
     volumes:
       - ./keys/bank_public.pem:/app/keys/bank_public.pem:ro
+    ports:
+      - "127.0.0.1:5001:5001"
     depends_on:
       db:
         condition: service_healthy

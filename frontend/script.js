@@ -5,12 +5,108 @@ const transferResult = document.getElementById("transferResult");
 const transferButton = document.getElementById("transferButton");
 const refreshButton = document.getElementById("refreshButton");
 const logoutButton = document.getElementById("logoutButton");
-
+const adminPanel = document.getElementById("adminPanel");
+const usersTable = document.getElementById("usersTable");
+const refreshUsersButton = document.getElementById("refreshUsersButton");
+const userManagementMessage = document.getElementById("userManagementMessage");
 const receiverSelect = document.getElementById("receiver");
 const amountInput = document.getElementById("amount");
 
 let currentUser = null;
+async function loadUsers() {
+    try {
+        userManagementMessage.textContent = "Loading users...";
+        userManagementMessage.className = "";
 
+        const response = await fetch("/api/admin/users", {
+            credentials: "same-origin",
+            cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to load users.");
+        }
+
+        usersTable.replaceChildren();
+
+        for (const user of data.users) {
+            const row = document.createElement("tr");
+
+            const values = [
+                user.id,
+                user.username,
+                user.role,
+                user.is_active ? "Active" : "Inactive"
+            ];
+
+            for (const value of values) {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            }
+
+            const actionCell = document.createElement("td");
+
+          if (user.role !== "admin") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "secondary-button";
+
+    button.textContent = user.is_active ? "Deactivate" : "Activate";
+
+    button.addEventListener("click", async () => {
+        const action = user.is_active ? "deactivate" : "activate";
+
+        if (!confirm(`${action} ${user.username}?`)) {
+            return;
+        }
+
+        try {
+            const url = user.is_active
+                ? `/api/admin/users/${user.id}`
+                : `/api/admin/users/${user.id}/activate`;
+
+            const response = await fetch(url, {
+                method: user.is_active ? "DELETE" : "POST",
+                credentials: "same-origin"
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || `Failed to ${action} user.`);
+            }
+
+            userManagementMessage.textContent =
+                `${user.username} ${action}d successfully.`;
+
+            await loadUsers();
+
+        } catch (error) {
+            userManagementMessage.textContent = error.message;
+            userManagementMessage.className = "error";
+        }
+    });
+
+    actionCell.appendChild(button);
+} else {
+    actionCell.textContent = "—";
+}
+
+            row.appendChild(actionCell);
+            usersTable.appendChild(row);
+        }
+
+        userManagementMessage.textContent = `${data.users.length} users found.`;
+
+    } catch (error) {
+        console.error("User management error:", error);
+        userManagementMessage.textContent = error.message;
+        userManagementMessage.className = "error";
+    }
+}
 
 function formatMoney(amount, currency = "EUR") {
     return Number(amount).toLocaleString("en-US", {
@@ -80,7 +176,12 @@ try {
 }
 
     currentUser = data.user;
-
+if (currentUser.role === "admin") {
+    adminPanel.hidden = false;
+    await loadUsers();
+} else {
+    adminPanel.hidden = true;
+}
     document.getElementById("currentUsername").textContent =
         currentUser.username;
 
@@ -274,7 +375,7 @@ form.addEventListener("submit", async function(event) {
 
 
 refreshButton.addEventListener("click", refreshDashboard);
-
+refreshUsersButton.addEventListener("click", loadUsers);
 
 logoutButton.addEventListener("click", async function() {
     logoutButton.disabled = true;

@@ -118,7 +118,7 @@ def authenticate_user(data):
         with conn.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT id, username, password_hash
+                SELECT id, username, password_hash,role
                 FROM users
                 WHERE username = %s
                 AND is_active = TRUE
@@ -131,12 +131,62 @@ def authenticate_user(data):
     if user is None:
         return {"error": "Invalid username or password"}, 401
 
-    user_id, stored_username, password_hash = user
+    user_id, stored_username, password_hash, role = user
 
     if not check_password_hash(password_hash, password):
         return {"error": "Invalid username or password"}, 401
 
     return {
         "user_id": user_id,
-        "username": stored_username
+        "username": stored_username,
+	"role":role
     }, 200
+def activate_user(user_id):
+    if not isinstance(user_id, int) or user_id <= 0:
+        return False, "Invalid user ID"
+
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                UPDATE users
+                SET is_active = TRUE
+                WHERE id = %s
+                AND username != 'BANK'
+                AND is_active = FALSE
+                RETURNING id, username
+            """, (user_id,))
+
+            user = cursor.fetchone()
+
+    if user is None:
+        return False, "User not found or cannot be activated"
+
+    return True, {
+        "user_id": user[0],
+        "username": user[1]
+    }
+
+def deactivate_user(user_id):
+    if not isinstance(user_id, int) or user_id <= 0:
+        return False, "Invalid user ID"
+
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                UPDATE users
+                SET is_active = FALSE
+                WHERE id = %s
+                AND username != 'BANK'
+                AND is_active = TRUE
+                RETURNING id, username
+            """, (user_id,))
+
+            user = cursor.fetchone()
+
+    if user is None:
+        return False, "User not found or cannot be deactivated"
+
+    return True, {
+        "user_id": user[0],
+        "username": user[1]
+    }
