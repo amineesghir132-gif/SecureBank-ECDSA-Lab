@@ -121,7 +121,8 @@ def authenticate_user(data):
                 SELECT id, username, password_hash
                 FROM users
                 WHERE username = %s
-                """,
+                AND is_active = TRUE
+		 """,
                 (username,)
             )
 
